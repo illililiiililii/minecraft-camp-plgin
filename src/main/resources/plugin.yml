@@ -1,0 +1,15 @@
+name: CampfireCoop
+version: 1.7.0
+main: local.campfire.loader.CampfireLoader
+api-version: '1.21.11'
+description: '3~4인 협동 생존과 황당한 원정'
+author: Campfire
+commands:
+  camp:
+    description: '협동 목표, 납품, 보상, 기지 귀환'
+    aliases: [coop]
+    usage: '/camp [menu|book|fun|utils|graves|sort|craft|ender|tree|tpa|tpaccept|tpdeny|help]'
+permissions:
+  campfire.admin:
+    description: '공용 기지 지정'
+    default: op

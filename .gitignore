@@ -1,0 +1,13 @@
+/target/
+/server/
+/plugins/
+/world*/
+/runtime-cache/
+/updates/
+*.log
+*.jar
+*.zip
+.idea/
+.vscode/
+*.iml
+.DS_Store

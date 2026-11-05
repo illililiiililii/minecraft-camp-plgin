@@ -1,0 +1,43 @@
+# 서버를 끈 상태에서 수정하고 재시작하세요.
+settings-version: 2
+home-warmup-seconds: 8
+home-cooldown-seconds: 60
+# true면 각 일반 월드에서 1명만 자도 밤을 넘깁니다.
+one-player-sleep: true
+# 사망 후 부활할 때 사망 좌표를 개인 메시지로 보여줍니다.
+death-coordinates: true
+
+# 수상한 원정: 2명 이상 생존 플레이어가 일반 월드에 있으면 자동 등장.
+# 구버전 config.yml에도 아래 기본값이 적용됩니다.
+adventure:
+  enabled: true
+  min-players: 2
+  cooldown-seconds: 1200
+  lifetime-seconds: 600
+  pranks: true
+
+# 서버 전체에서 최초 1분, 이후 기본 2분마다 접속한 일반 월드 생존자 1명에게 적립.
+# 지하에서도 적립하며 지상에 나오면 밀린 택배를 차례로 배송합니다.
+sky-supply:
+  enabled: true
+  interval-seconds: 120
+  catch-up-seconds: 1
+  max-in-flight: 3
+
+# 리소스팩 없이 동작하는 인게임 UI와 연출입니다.
+presentation:
+  hud: true
+  titles: true
+  effects: true
+  low-particles: false
+
+convenience:
+  death-chest: true
+  tree-chop: true
+  tree-max-logs: 64
+  replant: true
+
+fun:
+  bounty: true
+  combo: true
+  fishing: true
