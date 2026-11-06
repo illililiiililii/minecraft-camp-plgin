@@ -17,7 +17,7 @@ import java.util.*;
 
 /** A small, readable written-book manual; pages use dark ink on vanilla parchment. */
 final class GuideBook implements Listener {
-    private static final int EDITION=4;
+    private static final int EDITION=5;
     private static final TextColor INK=TextColor.color(0x252b30), ACCENT=TextColor.color(0x00675f), LINK=TextColor.color(0x245c9c);
     private final CampfireRuntime plugin;
     private final NamespacedKey key;
@@ -66,15 +66,15 @@ final class GuideBook implements Listener {
         pages.add(action("개인 보상 5~8","⑤ 엔더 진주 4개\n⑥ 다이아몬드 4개\n⑦ 네더라이트 파편 2개\n⑧ 네더의 별 1개\n\n보상은 단계별 한 번.\n공간이 부족하면 보관.\n명령을 반복해 수령!","[ 보상 하나 받기 ]","/camp reward"));
         pages.add(action("납품과 보상 규칙","납품은 생존 모드에서.\n필요 수량만 가져가요.\n이름 붙은 템은 보존!\n원목은 일반 원목 9종.\n\n접속 등록 후 완료한\n목표는 오프라인도 적립.\n늦게 온 사람에게 과거\n보상은 소급하지 않아요.","[ 현재 자원 납품 ]","/camp donate"));
         pages.add(action("공용 기지 귀환","운영자가 지정한 기지로\n8초 대기 후 돌아갑니다.\n이동·피해를 받으면 취소.\n피해 후 10초는 불가.\n성공 후 재사용 60초.\n\n도착 지점이 막히거나\n위험하면 취소됩니다.","[ 기지로 돌아가기 ]","/camp home"));
-        pages.add(page("하늘 택배","처음 1분, 이후 2분마다\n서버 전체 한 명에게!\n지하에 있어도 적립돼요.\n\n다이아 1개 30%\n날카 VII 나무검 20%\n날카 V 철검 16%\n효율 VI 도구 24%\n보호 VI 흉갑 8%\n날카 VII 철검 2%").append(plain("\n",INK)).append(jump("밀린 택배 안내 →",25)));
-        pages.add(page("하늘 장비의 한계","나무검: 유효 타격 32회\n철검 V: 유효 타격 24회\n철검 VII: 타격 12회\n보호 VI 흉갑: 피해 24회\n\n남은 횟수는 툴팁 표시.\n소진하면 사라집니다.\n기본 내구도도 소모돼요.\n수리·합성·추가 인챈트\n이전은 할 수 없어요."));
-        pages.add(page("효율 VI 도구","다이아 곡괭이·도끼\n다이아 삽·괭이·가위\n5종, 각 4.8% 확률.\n\n성공한 채굴 96회 제한.\n경작·껍질 벗기기 등은\n기본 내구도를 소모해요.\n행운·섬세한 손길 없음.\n찹트리도 원목당 1회!"));
+        pages.add(page("하늘 택배","광물 85% · 검 5%\n효율 도구 5% · 갑옷 5%\n철·금·청금석·다이아\n네더라이트 주괴는 희귀!\n철검 포함 검/도구 6재질, 갑옷 6재질\n네더라이트 장비도 희귀."));
+        pages.add(page("무제한 내구도","장비 내구도 소모 없음!\n기존 보급 사용 횟수도\n전부 제거했습니다.\n검: 날카로움 VII\n갑옷: 보호 VI\n도구: 효율 VI"));
+        pages.add(page("효율 VI 도구","나무·돌·철·금·다이아\n네더라이트 도구와 가위.\n사용 횟수 제한 없음!\n/camp delivery pause\n수령 정지 (적립은 계속)\n/camp delivery resume\n밀린 택배 수령 재개"));
         pages.add(action("수상한 원정 출발","닭 부장의 야근 던전\n감자 왕국 세무조사\n우주 출장 해골\n\n생존 2명 이상, 지상에서\n48블록 안에 모이세요.\n평평하고 넓은 곳 필요.\n출발 10초 뒤 전투!","[ 원정 시작 요청 ]","/camp adventure start"));
         pages.add(action("원정 전투 규칙","전투는 총 3차례.\n마지막에는 보스 등장!\n원정 재사용은 20분.\n제한 시간은 10분.\n\n모두 현장 80블록 밖으로\n떠나면 원정이 끝나요.\n서버 종료 시도 끝나요.\n좌표·적·시간을 확인!","[ 원정 현황 보기 ]","/camp adventure"));
         pages.add(page("보상과 황당한 일","현장 64블록 안의\n생존 참여자에게 지급!\n다이아 2개·에메랄드 4개\n수상한 감자·경험치 150\n\n감자: 20초간 신속/성급함/\n야간 투시 중 하나.\n전투 중 닭 감사팀 방문,\n몬스터 부양, 감자 속보!\n농담이어도 전투는 진짜."));
         pages.add(page("죽으면 어떻게 돼요?","사망 드롭을 한 상자에!\n갑옷·보조손도 보관해요.\n27칸 초과는 여러 페이지.\n\n주변에 놓을 수 없으면\n재생성 지점·스폰에서\n안전한 곳을 찾습니다.\n경험치는 기본 규칙.\n인벤 보존이 켜져 있으면\n회수 상자는 안 만들어요."));
         pages.add(action("내 아이템 회수","좌표로 가서 상자 우클릭\n→ 모두 회수 버튼 누르기.\n본인·운영자만 회수 가능.\n상자 8블록 안에서만!\n\n공간 부족분은 계속 보관.\n자동 만료는 없습니다.\n다 받으면 상자도 정리.\n이 책은 사망해도 유지!","[ 내 상자 좌표 ]","/camp graves"));
-        pages.add(action("찹트리","웅크린 채 도끼로\n자연 원목을 베세요.\n기본 최대 64개입니다.\n추가 원목도 내구도와\n보급 횟수가 줄어듭니다.\n\n웅크림 해제·도끼 파손·\n멀리 이동하면 멈춰요.\n건축물 곁에서는 주의!","[ 찹트리 켜기/끄기 ]","/camp tree"));
+        pages.add(action("찹트리","웅크린 채 도끼로\n자연 원목을 베세요.\n기본 최대 64개입니다.\n추가 원목도 내구도\n제한 없이 벨 수 있어요.\n\n웅크림 해제·도끼 파손·\n멀리 이동하면 멈춰요.\n건축물 곁에서는 주의!","[ 찹트리 켜기/끄기 ]","/camp tree"));
         pages.add(page("수확·재심기","웅크린 채 다 자란\n작물에 우클릭하세요.\n밀·당근·감자·비트 가능.\n\n수확물에서 씨앗/작물\n1개를 써서 다시 심어요.\n미성숙 작물은 그대로.\n심을 것이 안 나오면\n수확하지 않습니다.\n보호 구역에서는 취소!"));
         pages.add(action("정리와 제작대","/camp sort\n핫바·장비·보조손 유지.\n나머지를 합쳐 정렬해요.\n이름·인챈트도 보존해요.\n다른 창은 닫고 사용!\n\n/camp craft\n어디서든 제작대 열기.","[ 휴대용 제작대 ]","/camp craft"));
         pages.add(action("엔더 창고","엔더 상자 아이템을\n인벤토리에 지니고\n있으면 원격으로 열어요.\n아이템은 소비하지 않아요.\n\n창고 내용은 개인별!\n원래 엔더 상자와 같은\n아이템에 접근합니다.","[ 엔더 창고 열기 ]","/camp ender"));

@@ -199,7 +199,7 @@ final class CampPresentation implements Listener {
             } else {
                 Component combo = plugin.funGames()==null?null:plugin.funGames().hud(p,System.currentTimeMillis());
                 if(combo!=null) { p.sendActionBar(combo);continue; }
-                String supply = plugin.getConfig().getBoolean("sky-supply.enabled", true) ? "택배 " + plugin.extras().supplies().pending(p.getUniqueId()) + "개 · 적립 " + clock(a.supplySeconds()) : "택배 OFF";
+                String supply = plugin.getConfig().getBoolean("sky-supply.enabled", true) ? (plugin.extras().supplies().paused(p.getUniqueId()) ? "택배 정지 " : "택배 ") + plugin.extras().supplies().pending(p.getUniqueId()) + "개 · 적립 " + clock(a.supplySeconds()) : "택배 OFF";
                 p.sendActionBar(text("◆ " + supply, GOLD).append(text("   |   보상 " + plugin.menuState(p).rewards() + "   |   /camp", TEAL)));
             }
         }

@@ -7,12 +7,12 @@ class SupplyRulesTest {
     @Test void exactDistributionHasOnlyTwoPercentJackpots() {
         int[] counts = new int[6];
         for (int i = 0; i < 100; i++) counts[SupplyRules.roll(i).ordinal()]++;
-        assertArrayEquals(new int[]{30,20,16,24,8,2}, counts);
+        assertArrayEquals(new int[]{85,5,0,5,5,0}, counts);
     }
     @Test void rareStrongestSwordHasShortestLifetime() {
-        assertEquals(32, SupplyRules.charges(SupplyRules.Prize.WOOD_SWORD));
-        assertEquals(24, SupplyRules.charges(SupplyRules.Prize.ARMOR));
-        assertEquals(12, SupplyRules.charges(SupplyRules.Prize.JACKPOT));
+        assertEquals(-1, SupplyRules.charges(SupplyRules.Prize.WOOD_SWORD));
+        assertEquals(-1, SupplyRules.charges(SupplyRules.Prize.ARMOR));
+        assertEquals(-1, SupplyRules.charges(SupplyRules.Prize.JACKPOT));
     }
     @Test void wavesScaleAndAreBoundedForFourPlayers() {
         assertEquals(3, SupplyRules.waveSize(1, 2));

@@ -396,6 +396,7 @@ public class CampfireRuntime implements Listener, TabExecutor {
             msg(sender, "/camp status 목표 보기 | /camp donate 현재 목표 자원 납품");
             msg(sender, "/camp menu 클릭 메뉴 | /camp effects 본인의 이펙트 켜기/끄기");
             msg(sender, "/camp graves 회수 상자 좌표 | /camp utils 편의 기능 메뉴");
+            msg(sender, "/camp delivery pause 수령 정지 | /camp delivery resume 재개 (정지 중 적립 유지)");
             msg(sender, "/camp book 모든 기능을 설명하는 안내서 재지급");
             msg(sender, "/camp fun 현상수배·파티 콤보·수상한 낚시 안내");
             msg(sender, "/camp reward 보상 1개 수령 | /camp home 공용 기지 귀환");
@@ -407,6 +408,7 @@ public class CampfireRuntime implements Listener, TabExecutor {
         }
         if (!(sender instanceof Player p)) { msg(sender, "게임 안에서 사용하는 명령어입니다. /camp status, /camp help 가능"); return true; }
         switch (sub) {
+            case "delivery", "택배" -> extras.supplies().command(p,args);
             case "fun" -> funGames.status(p);
             case "book" -> guideBook.ensure(p, true);
             case "graves", "grave" -> deathChests.command(p, args);
@@ -435,8 +437,9 @@ public class CampfireRuntime implements Listener, TabExecutor {
             if (sender.hasPermission("campfire.admin")) subs.add("cancel");
             return subs.stream().filter(s -> s.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         }
+        if (args.length == 2 && args[0].equalsIgnoreCase("delivery")) return List.of("pause", "resume", "status").stream().filter(v->v.startsWith(args[1].toLowerCase(Locale.ROOT))).toList();
         if (args.length != 1) return List.of();
-        List<String> options = new ArrayList<>(List.of("menu", "book", "fun", "status", "donate", "reward", "home", "adventure", "effects", "graves", "utils", "sort", "craft", "ender", "tree", "tpa", "tpaccept", "tpdeny", "help"));
+        List<String> options = new ArrayList<>(List.of("delivery", "menu", "book", "fun", "status", "donate", "reward", "home", "adventure", "effects", "graves", "utils", "sort", "craft", "ender", "tree", "tpa", "tpaccept", "tpdeny", "help"));
         if (sender.hasPermission("campfire.admin")) options.add("sethome");
         return options.stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
     }

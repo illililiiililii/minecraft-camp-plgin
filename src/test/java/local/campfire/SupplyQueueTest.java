@@ -93,4 +93,17 @@ class SupplyQueueTest {
         queue().tick(t+120_000*100,List.of(p),l->false);
         assertEquals(1,queue().pending(p.getUniqueId()));
     }
+    @Test void pausePersistsAndAccumulatesUntilResumeWithoutLosingFlyingParcels() throws Exception {
+        PlayerMock p=player("PausedMiner");long t=accrue(p,2);
+        queue().tick(t+1000,List.of(p),l->true);assertEquals(1,queue().inFlight(p.getUniqueId()));
+        queue().command(p,new String[]{"delivery","pause"});
+        assertTrue(queue().paused(p.getUniqueId()));assertEquals(0,queue().inFlight(p.getUniqueId()));
+        queue().tick(t+120000,List.of(p),l->true);assertEquals(3,queue().pending(p.getUniqueId()));assertEquals(0,queue().inFlight(p.getUniqueId()));
+        queue().close();
+        SupplyQueue reloaded=new SupplyQueue(plugin,0,plugin.extras()::supplyItem,(owner,item,rare)->{});
+        assertTrue(reloaded.paused(p.getUniqueId()));assertEquals(3,reloaded.pending(p.getUniqueId()));
+        reloaded.command(p,new String[]{"delivery","resume"});
+        reloaded.tick(System.currentTimeMillis()+1000,List.of(p),l->true);
+        assertFalse(reloaded.paused(p.getUniqueId()));assertEquals(1,reloaded.inFlight(p.getUniqueId()));reloaded.close();
+    }
 }

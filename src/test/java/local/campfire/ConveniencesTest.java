@@ -64,7 +64,7 @@ class ConveniencesTest {
         server.getPluginManager().disablePlugin(plugin.owner()); server.getPluginManager().enablePlugin(plugin.owner());
         assertTrue(plugin.isEnabled());
         var g=plugin.deathChests().owned(p.getUniqueId()).getFirst();
-        assertEquals(96,plugin.extras().remaining(g.items.getFirst()));
+        assertEquals(-1,plugin.extras().remaining(g.items.getFirst()));
         assertEquals(6,g.items.getFirst().getEnchantmentLevel(org.bukkit.enchantments.Enchantment.EFFICIENCY));
     }
     @Test void sortingPreservesHotbarArmorOffhandAndCustomMetadata() {

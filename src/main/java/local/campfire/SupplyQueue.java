@@ -28,6 +28,7 @@ final class SupplyQueue implements Listener {
     private final LinkedHashMap<UUID,Parcel> parcels=new LinkedHashMap<>();
     private final Map<UUID,Flight> flying=new HashMap<>();
     private final Map<UUID,Long> deliveryAt=new HashMap<>();
+    private final Set<UUID> paused=new HashSet<>();
     private long nextAt;
     private boolean writable=true;
 
@@ -39,6 +40,7 @@ final class SupplyQueue implements Listener {
         if(file.exists()) {
             YamlConfiguration data=new YamlConfiguration();data.load(file);
             if(data.getInt("format",0)!=1) throw new IOException("Unsupported supplies.yml format");
+            for(String id:data.getStringList("paused")) paused.add(UUID.fromString(id));
             nextAt=data.getLong("next-supply",now+60_000);
             var section=data.getConfigurationSection("parcels");
             if(section!=null) for(String id:section.getKeys(false)) {
@@ -69,9 +71,20 @@ final class SupplyQueue implements Listener {
         if(save()) return true;
         added.forEach(parcels::remove);return false;
     }
+    boolean paused(UUID id) { return paused.contains(id); }
+    void command(Player p,String[] args) {
+        String mode=args.length>1?args[1].toLowerCase(Locale.ROOT):"status";
+        UUID id=p.getUniqueId(); boolean old=paused.contains(id);
+        if(mode.equals("pause")||mode.equals("stop")||mode.equals("정지")) paused.add(id);
+        else if(mode.equals("resume")||mode.equals("start")||mode.equals("재개")) paused.remove(id);
+        else { p.sendMessage("택배 "+(old?"수령 정지":"수령 중")+" · 누적 "+pending(id)+"개 | /camp delivery pause /camp delivery resume"); return; }
+        if(!save()) { if(old) paused.add(id); else paused.remove(id); p.sendMessage("저장 실패: 수령 설정을 바꾸지 않았습니다."); return; }
+        if(paused.contains(id)) for(Flight flight:new ArrayList<>(flying.values())) if(flight.parcel.owner.equals(id)) recover(flight.parcel.id);
+        p.sendMessage(paused.contains(id)?"택배 수령 정지! 택배는 계속 누적됩니다. /camp delivery resume 으로 재개":"택배 수령 재개! 지상에서 밀린 택배가 내려옵니다.");
+    }
     private boolean save() {
         if(!writable) return false;
-        YamlConfiguration data=new YamlConfiguration();data.set("format",1);data.set("next-supply",nextAt);
+        YamlConfiguration data=new YamlConfiguration();data.set("format",1);data.set("paused",paused.stream().map(UUID::toString).sorted().toList());data.set("next-supply",nextAt);
         for(Parcel p:parcels.values()) {
             String k="parcels."+p.id+".";data.set(k+"owner",p.owner.toString());data.set(k+"item",p.item);
         }
@@ -106,7 +119,7 @@ final class SupplyQueue implements Listener {
         Set<UUID> online=new HashSet<>();eligible.forEach(p->online.add(p.getUniqueId()));
         for(Flight flight:new ArrayList<>(flying.values())) {
             Player owner=Bukkit.getPlayer(flight.parcel.owner);
-            if(!flight.entity.isValid() || owner==null || !online.contains(owner.getUniqueId()) || !skyClear.test(owner.getLocation())
+            if(!flight.entity.isValid() || owner==null || paused.contains(owner.getUniqueId()) || !online.contains(owner.getUniqueId()) || !skyClear.test(owner.getLocation())
                 || !owner.getWorld().equals(flight.entity.getWorld()) || owner.getLocation().distanceSquared(flight.entity.getLocation())>32*32
                 || now-flight.since>=60_000) recover(flight.parcel.id);
         }
@@ -114,7 +127,7 @@ final class SupplyQueue implements Listener {
         long gap=Math.clamp(plugin.getConfig().getInt("sky-supply.catch-up-seconds",1),1,10)*1000L;
         for(Player owner:eligible) {
             UUID id=owner.getUniqueId();
-            if(now<deliveryAt.getOrDefault(id,0L) || inFlight(id)>=max || !skyClear.test(owner.getLocation())) continue;
+            if(paused.contains(id) || now<deliveryAt.getOrDefault(id,0L) || inFlight(id)>=max || !skyClear.test(owner.getLocation())) continue;
             Parcel next=parcels.values().stream().filter(p->p.owner.equals(id) && !flying.containsKey(p.id)).findFirst().orElse(null);
             if(next==null) continue;
             deliveryAt.put(id,now+gap);
@@ -144,7 +157,7 @@ final class SupplyQueue implements Listener {
         if(parcel==null || flight==null || !flight.entity.getUniqueId().equals(e.getItem().getUniqueId())) {
             e.setCancelled(true);e.getItem().remove();return;
         }
-        if(!(e.getEntity() instanceof Player p) || !p.getUniqueId().equals(parcel.owner) || e.getRemaining()!=0 || !writable) { e.setCancelled(true);return; }
+        if(!(e.getEntity() instanceof Player p) || !p.getUniqueId().equals(parcel.owner) || e.getRemaining()!=0 || paused.contains(parcel.owner) || !writable) { e.setCancelled(true);return; }
         parcels.remove(id);
         if(!save()) { parcels.put(id,parcel);e.setCancelled(true);return; }
         flying.remove(id);

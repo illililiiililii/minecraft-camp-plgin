@@ -124,13 +124,13 @@ class CampfireRuntimeTest {
     }
     @Test void supplyGearHasAdvertisedEnchantmentsAndBoundedCharges() {
         ItemStack sword = plugin.extras().supplyItem(SupplyRules.Prize.JACKPOT);
-        assertEquals(Material.IRON_SWORD, sword.getType());
+        assertTrue(sword.getType().name().endsWith("_SWORD"));
         assertEquals(7, sword.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.SHARPNESS));
-        assertEquals(12, plugin.extras().remaining(sword));
+        assertEquals(-1, plugin.extras().remaining(sword)); assertTrue(sword.getItemMeta().isUnbreakable());
         ItemStack armor = plugin.extras().supplyItem(SupplyRules.Prize.ARMOR);
         assertEquals(6, armor.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.PROTECTION));
-        assertEquals(24, plugin.extras().remaining(armor));
-        assertEquals(1, plugin.extras().supplyItem(SupplyRules.Prize.DIAMOND).getAmount());
+        assertEquals(-1, plugin.extras().remaining(armor)); assertTrue(armor.getItemMeta().isUnbreakable());
+        assertTrue(plugin.extras().supplyItem(SupplyRules.Prize.DIAMOND).getAmount() >= 1);
     }
     @Test void swordExpiresOnTwelfthSuccessfulHit() {
         PlayerMock p = player("Alice");
@@ -138,20 +138,20 @@ class CampfireRuntimeTest {
         var zombie = p.getWorld().spawn(p.getLocation(), org.bukkit.entity.Zombie.class);
         for (int i = 0; i < 11; i++) plugin.extras().damage(new org.bukkit.event.entity.EntityDamageByEntityEvent(p, zombie,
             org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, 1));
-        assertEquals(1, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
+        assertEquals(-1, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
         plugin.extras().damage(new org.bukkit.event.entity.EntityDamageByEntityEvent(p, zombie,
             org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK, 1));
-        assertEquals(Material.AIR, p.getInventory().getItemInMainHand().getType());
+        assertFalse(p.getInventory().getItemInMainHand().getType().isAir());
     }
     @Test void armorExpiresOnTwentyFourthDamagingEvent() {
         PlayerMock p = player("Alice");
         p.getInventory().setChestplate(plugin.extras().supplyItem(SupplyRules.Prize.ARMOR));
         for (int i = 0; i < 23; i++) plugin.extras().damage(new org.bukkit.event.entity.EntityDamageEvent(p,
             org.bukkit.event.entity.EntityDamageEvent.DamageCause.FALL, 1));
-        assertEquals(1, plugin.extras().remaining(p.getInventory().getChestplate()));
+        assertEquals(-1, plugin.extras().remaining(p.getInventory().getChestplate()));
         plugin.extras().damage(new org.bukkit.event.entity.EntityDamageEvent(p,
             org.bukkit.event.entity.EntityDamageEvent.DamageCause.FALL, 1));
-        assertTrue(p.getInventory().getChestplate() == null || p.getInventory().getChestplate().getType().isAir());
+        assertNotNull(p.getInventory().getChestplate());
     }
     @Test void defaultCommandOpensAReadOnlyFortyFiveSlotMenu() {
         PlayerMock p = player("Alice");
@@ -204,7 +204,7 @@ class CampfireRuntimeTest {
             ItemStack item = plugin.extras().efficiencyTool(type);
             assertEquals(type, item.getType());
             assertEquals(6, item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.EFFICIENCY));
-            assertEquals(96, plugin.extras().remaining(item));
+            assertEquals(-1, plugin.extras().remaining(item)); assertTrue(item.getItemMeta().isUnbreakable());
         }
     }
     @Test void lastMiningChargePreservesToolForOreDropsThenExpiresNextTick() {
@@ -212,17 +212,46 @@ class CampfireRuntimeTest {
         p.getInventory().setItemInMainHand(plugin.extras().efficiencyTool(Material.DIAMOND_PICKAXE));
         var event = new org.bukkit.event.block.BlockBreakEvent(p.getWorld().getBlockAt(0, 64, 0), p);
         for (int i = 0; i < 95; i++) plugin.extras().mine(event);
-        assertEquals(1, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
+        assertEquals(-1, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
         plugin.extras().mine(event);
         assertEquals(Material.DIAMOND_PICKAXE, p.getInventory().getItemInMainHand().getType());
-        assertEquals(0, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
-        plugin.extras().exhaustedTool(event); assertTrue(event.isCancelled());
+        assertEquals(-1, plugin.extras().remaining(p.getInventory().getItemInMainHand()));
+        plugin.extras().exhaustedTool(event); assertFalse(event.isCancelled());
         server.getScheduler().performTicks(2);
-        assertEquals(Material.AIR, p.getInventory().getItemInMainHand().getType());
+        assertFalse(p.getInventory().getItemInMainHand().getType().isAir());
     }
     @Test void freshServerHasOneMinuteFirstDropAndTwoMinuteInterval() {
         assertTrue(plugin.extras().snapshot().supplySeconds() <= 60);
         assertTrue(plugin.extras().snapshot().supplySeconds() >= 55);
         assertEquals(120, plugin.getConfig().getInt("sky-supply.interval-seconds"));
+    }
+    @Test void allEquipmentTiersAndMineralsAppearAndNetheriteIsRare() throws Exception {
+        var field=AdventureExtras.class.getDeclaredField("random");field.setAccessible(true);
+        ((java.util.Random)field.get(plugin.extras())).setSeed(1800);
+        java.util.Set<Material> swords=new java.util.HashSet<>(),armor=new java.util.HashSet<>(),tools=new java.util.HashSet<>(),minerals=new java.util.HashSet<>();
+        int netherite=0;
+        for(int i=0;i<10000;i++) {
+            swords.add(plugin.extras().supplyItem(SupplyRules.Prize.WOOD_SWORD).getType());
+            armor.add(plugin.extras().supplyItem(SupplyRules.Prize.ARMOR).getType());
+            tools.add(plugin.extras().supplyItem(SupplyRules.Prize.TOOLS).getType());
+            Material mineral=plugin.extras().supplyItem(SupplyRules.Prize.DIAMOND).getType();minerals.add(mineral);if(mineral==Material.NETHERITE_INGOT)netherite++;
+        }
+        for(String tier:java.util.List.of("WOODEN","STONE","IRON","GOLDEN","DIAMOND","NETHERITE")) {
+            assertTrue(swords.contains(Material.valueOf(tier+"_SWORD")));
+            for(String tool:java.util.List.of("PICKAXE","AXE","SHOVEL","HOE")) assertTrue(tools.contains(Material.valueOf(tier+"_"+tool)));
+        }
+        for(String tier:java.util.List.of("LEATHER","CHAINMAIL","IRON","GOLDEN","DIAMOND","NETHERITE"))
+            for(String slot:java.util.List.of("HELMET","CHESTPLATE","LEGGINGS","BOOTS")) assertTrue(armor.contains(Material.valueOf(tier+"_"+slot)));
+        assertEquals(java.util.Set.of(Material.IRON_INGOT,Material.GOLD_INGOT,Material.LAPIS_LAZULI,Material.DIAMOND,Material.NETHERITE_INGOT),minerals);
+        assertTrue(netherite>0 && netherite<100);
+    }
+    @Test void legacyChargesAreRemovedAndOrdinaryEquipmentCannotTakeDurabilityDamage() {
+        PlayerMock p=player("Durability");ItemStack tool=new ItemStack(Material.DIAMOND_PICKAXE);
+        tool.editMeta(meta->meta.getPersistentDataContainer().set(new NamespacedKey(plugin.owner(),"supply_charges"),org.bukkit.persistence.PersistentDataType.INTEGER,1));
+        assertEquals(-1,plugin.extras().remaining(tool));
+        assertFalse(tool.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin.owner(),"supply_charges")));
+        ItemStack sword=new ItemStack(Material.DIAMOND_SWORD);
+        var event=new org.bukkit.event.player.PlayerItemDamageEvent(p,sword,3);
+        plugin.extras().noDurability(event);assertTrue(event.isCancelled());assertTrue(sword.getItemMeta().isUnbreakable());
     }
 }

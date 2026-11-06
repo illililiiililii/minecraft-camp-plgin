@@ -65,7 +65,9 @@ final class AdventureExtras implements Listener {
         tag = new NamespacedKey(plugin.owner(), "temporary_adventure");
         potato = new NamespacedKey(plugin.owner(), "suspicious_potato");
         long now = System.currentTimeMillis();
+        for(Player player:Bukkit.getOnlinePlayers()) for(ItemStack item:player.getInventory().getContents()) immortal(item);
         supplies = new SupplyQueue(plugin, supplyAt, this::supplyItem, (p, item, rare) -> {
+            ItemStack delivered=item.getItemStack(); immortal(delivered); item.setItemStack(delivered);
             if (plugin.presentation() != null) plugin.presentation().supplied(p, item, rare);
         });
         nextAdventure = adventureAt == 0 ? now + 480_000 : adventureAt;
@@ -124,49 +126,52 @@ final class AdventureExtras implements Listener {
         for (int dy = 1; dy <= 7; dy++) if (!loc.clone().add(0, dy, 0).getBlock().getType().isAir()) return false;
         return w.getHighestBlockYAt(loc) <= loc.getBlockY() + 1;
     }
+    private String supplyTier() {
+        int r=random.nextInt(1000);
+        return r<250?"WOODEN":r<500?"STONE":r<750?"IRON":r<900?"GOLDEN":r<995?"DIAMOND":"NETHERITE";
+    }
     ItemStack supplyItem(SupplyRules.Prize prize) {
-        if (prize == SupplyRules.Prize.DIAMOND) return new ItemStack(Material.DIAMOND);
-        if (prize == SupplyRules.Prize.TOOLS) {
-            Material[] tools = {Material.DIAMOND_PICKAXE, Material.DIAMOND_AXE, Material.DIAMOND_SHOVEL, Material.DIAMOND_HOE, Material.SHEARS};
-            return efficiencyTool(tools[random.nextInt(tools.length)]);
+        if(prize==SupplyRules.Prize.DIAMOND) {
+            int r=random.nextInt(1000);
+            Material m=r<350?Material.IRON_INGOT:r<600?Material.GOLD_INGOT:r<800?Material.LAPIS_LAZULI:r<995?Material.DIAMOND:Material.NETHERITE_INGOT;
+            int count=m==Material.IRON_INGOT?3+random.nextInt(4):m==Material.GOLD_INGOT?2+random.nextInt(3):m==Material.LAPIS_LAZULI?4+random.nextInt(5):1;
+            return new ItemStack(m,count);
         }
-        Material type = prize == SupplyRules.Prize.WOOD_SWORD ? Material.WOODEN_SWORD
-            : prize == SupplyRules.Prize.ARMOR ? Material.IRON_CHESTPLATE : Material.IRON_SWORD;
-        ItemStack item = new ItemStack(type);
-        int count = SupplyRules.charges(prize);
-        String name = switch (prize) {
-            case WOOD_SWORD -> "하늘에서 온 나뭇가지 — 날카로움 VII";
-            case IRON_SWORD -> "택배 기사님의 철검 — 날카로움 V";
-            case ARMOR -> "과잉 포장 뽁뽁이 — 보호 VI";
-            case JACKPOT -> "퇴근 12번 남은 철검 — 날카로움 VII";
-            default -> throw new IllegalArgumentException();
-        };
-        item.editMeta(meta -> {
-            meta.displayName(Component.text(name, NamedTextColor.GOLD));
-            meta.getPersistentDataContainer().set(charges, PersistentDataType.INTEGER, count);
-        });
-        item.addUnsafeEnchantment(prize == SupplyRules.Prize.ARMOR ? Enchantment.PROTECTION : Enchantment.SHARPNESS,
-            prize == SupplyRules.Prize.ARMOR ? 6 : prize == SupplyRules.Prize.IRON_SWORD ? 5 : 7);
-        updateLore(item, count);
+        String tier=supplyTier();
+        if(prize==SupplyRules.Prize.TOOLS) {
+            String[] tools={"PICKAXE","AXE","SHOVEL","HOE"};
+            return efficiencyTool(random.nextInt(5)==0?Material.SHEARS:Material.valueOf(tier+"_"+tools[random.nextInt(tools.length)]));
+        }
+        boolean armor=prize==SupplyRules.Prize.ARMOR;
+        if(armor) tier=tier.equals("WOODEN")?"LEATHER":tier.equals("STONE")?"CHAINMAIL":tier;
+        String[] slots={"HELMET","CHESTPLATE","LEGGINGS","BOOTS"};
+        ItemStack item=new ItemStack(Material.valueOf(tier+"_"+(armor?slots[random.nextInt(4)]:"SWORD")));
+        item.addUnsafeEnchantment(armor?Enchantment.PROTECTION:Enchantment.SHARPNESS,armor?6:7);
+        immortal(item);
         return item;
     }
     ItemStack efficiencyTool(Material material) {
-        String name = switch (material) {
-            case DIAMOND_PICKAXE -> "광부의 초과근무 곡괭이";
-            case DIAMOND_AXE -> "벌목 부장의 급행 도끼";
-            case DIAMOND_SHOVEL -> "땅 파기 특급 삽";
-            case DIAMOND_HOE -> "농사팀의 과몰입 괭이";
-            case SHEARS -> "미용실의 야근 가위";
-            default -> throw new IllegalArgumentException("Not an efficiency supply tool");
-        };
-        ItemStack item = new ItemStack(material);
-        item.editMeta(meta -> {
-            meta.displayName(CampPresentation.heading(name + " · 효율 VI", CampPresentation.TEAL));
-            meta.getPersistentDataContainer().set(charges, PersistentDataType.INTEGER, 96);
-        });
-        item.addUnsafeEnchantment(Enchantment.EFFICIENCY, 6);
-        updateLore(item, 96);
+        ItemStack item=new ItemStack(material);
+        item.addUnsafeEnchantment(Enchantment.EFFICIENCY,6);
+        immortal(item);
         return item;
+    }
+    private void immortal(ItemStack item) {
+        if(item==null || !item.hasItemMeta() && item.getType().getMaxDurability()==0) return;
+        if(item.getType().getMaxDurability()==0) return;
+        item.editMeta(meta->{
+            boolean legacy=meta.getPersistentDataContainer().has(charges,PersistentDataType.INTEGER);
+            meta.getPersistentDataContainer().remove(charges);
+            meta.setUnbreakable(true);
+            if(meta instanceof org.bukkit.inventory.meta.Damageable damage) damage.setDamage(0);
+            if(legacy) meta.lore(null);
+        });
+    }
+    @EventHandler(ignoreCancelled=true) public void noDurability(org.bukkit.event.player.PlayerItemDamageEvent e) {
+        e.setCancelled(true); immortal(e.getItem());
+    }
+    @EventHandler public void immortalJoin(org.bukkit.event.player.PlayerJoinEvent e) {
+        for(ItemStack item:e.getPlayer().getInventory().getContents()) immortal(item);
     }
     private void updateLore(ItemStack item, int count) {
         boolean tool = item.containsEnchantment(Enchantment.EFFICIENCY);
@@ -176,10 +181,7 @@ final class AdventureExtras implements Listener {
             CampPresentation.text(tool ? "채굴 96회 제한 · 기타 동작은 기본 내구도 소모" : "유효 사용 횟수 소진 시 사라집니다.", NamedTextColor.GRAY),
             CampPresentation.text("수리 · 합성 · 인챈트 이전 불가", NamedTextColor.DARK_GRAY))));
     }
-    int remaining(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return -1;
-        return item.getItemMeta().getPersistentDataContainer().getOrDefault(charges, PersistentDataType.INTEGER, -1);
-    }
+    int remaining(ItemStack item) { immortal(item); return -1; }
     private void spend(ItemStack item, Runnable destroy, Player owner) {
         int left = remaining(item);
         if (left < 0) return;
