@@ -134,6 +134,7 @@ public class CampfireRuntime implements Listener, TabExecutor {
             getLogger().log(java.util.logging.Level.SEVERE, "Could not load graves.yml; original chest data was not overwritten.", ex);
             getServer().getPluginManager().disablePlugin(owner()); return;
         }
+        new EnchantExtraction(this);
         conveniences = new Conveniences(this);
         guideBook = new GuideBook(this);
         presentation = new CampPresentation(this);

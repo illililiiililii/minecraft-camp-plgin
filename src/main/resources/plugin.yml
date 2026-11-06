@@ -1,5 +1,5 @@
 name: CampfireCoop
-version: 1.8.0
+version: 1.9.0
 main: local.campfire.loader.CampfireLoader
 api-version: '1.21.11'
 description: '3~4인 협동 생존과 황당한 원정'

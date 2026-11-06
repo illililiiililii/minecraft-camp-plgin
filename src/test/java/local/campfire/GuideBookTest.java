@@ -45,7 +45,7 @@ class GuideBookTest {
     }
     @Test void manualHasClickableContentsAndCoversEveryFeature() {
         BookMeta meta=(BookMeta)plugin.guideBook().create().getItemMeta();
-        assertEquals(29,meta.getPageCount());
+        assertEquals(30,meta.getPageCount());
         assertFalse(meta.page(2).children().isEmpty());
         String text=meta.pages().stream().map(PlainTextComponentSerializer.plainText()::serialize).reduce("",(a,b)->a+"\n"+b);
         for(String term:List.of("원목","위더","철검","효율 VI","사망","재심기","찹트리","엔더 창고","tpaccept","이펙트","/camp book")) assertTrue(text.contains(term),term);

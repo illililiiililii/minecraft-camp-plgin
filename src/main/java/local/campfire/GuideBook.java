@@ -17,7 +17,7 @@ import java.util.*;
 
 /** A small, readable written-book manual; pages use dark ink on vanilla parchment. */
 final class GuideBook implements Listener {
-    private static final int EDITION=5;
+    private static final int EDITION=6;
     private static final TextColor INK=TextColor.color(0x252b30), ACCENT=TextColor.color(0x00675f), LINK=TextColor.color(0x245c9c);
     private final CampfireRuntime plugin;
     private final NamespacedKey key;
@@ -86,6 +86,7 @@ final class GuideBook implements Listener {
         pages.add(page("파티 콤보","친구와 15초 안에\n번갈아 몬스터를 잡아요.\n같은 사람이 연속 처치,\n멀리 이동하면 처음부터.\n\n5연속마다 신속 10초\n재생 6초·경험치 25!\n보상 재사용은 60초.\n자연 생성 몬스터만 인정.\n원정·스포너 몹은 제외."));
         pages.add(page("수상한 낚시","낚시 성공 시 20% 확률!\n개인 재사용 90초.\n원래 낚시 보상은 유지.\n\n에메랄드·수상한 감자\n엔더 진주·희귀 다이아\n또는 꽝 사직서 등장!\n추가 보상은 택배 적립.\n지상에서 받아 가세요.\n/camp fun 으로 안내!"));
         pages.add(action("접속 유지 패치","기능 모듈은 서버를\n끄지 않고 교체합니다.\n진행 중 원정은 종료돼요.\n아이템·목표·택배는 유지.\n\n운영자 전용:\n/camp update 패치 적용\n/camp reload 설정 재적용\n서버 본체·로더 교체는\n별도 재시작이 필요해요.","[ 실행 버전 확인 ]","/camp version"));
+        pages.add(page("숫돌 인챈트 추출","숫돌에 일반 책 1개와\n인챈트된 도구·갑옷을!\n모든 인챈트를 책으로\n이전합니다. 저주도 포함.\n날카 VII·효율 VI도 유지.\n결과 책을 클릭하면 완료.\n장비는 인챈트만 제거돼요.\n책 삽입은 클릭·Shift 가능.\n결과는 클릭 또는 Shift!"));
         meta.pages(pages); book.setItemMeta(meta); return book;
     }
     void ensure(Player p,boolean requested) {
